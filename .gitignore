@@ -1,0 +1,13 @@
+/.coverage
+/.coveralls.yml
+/.python-version
+/*.sh
+/django_reorder_items_widget.egg-info/
+/build/
+/dist/
+/.tox/
+/.vscode/
+/docs/build/
+db.sqlite3*
+my.cnf
+__pycache__/
