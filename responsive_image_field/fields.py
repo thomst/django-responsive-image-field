@@ -2,6 +2,7 @@ import hashlib
 import os
 from io import BytesIO
 from django.db import models
+from django.core.files.base import File
 from django.db.models.fields import files
 from PIL import Image
 from PIL.Image import Resampling
@@ -56,50 +57,66 @@ class ResizedImageMixin:
         name, content = self._resize_content(name, content)
         return super().save(name, content, save)
 
-    def _get_format(self, name, content):
+    def _guess_original_format(self, name, content):
         _, ext = os.path.splitext(name)
 
-        # If format given use it.
-        if self.field.format:
+        # Try to get the original format from content or file extension.
+        if format := getattr(content, 'format', None):
             return format
-
-        # Otherwise try to get the original format from content.
-        elif format := getattr(content, format, None):
-            return format
-
-        # Or try to get the original format from the file extension.
         elif ext in self.EXT_TO_FORMATS:
             return self.EXT_TO_FORMATS[ext]
 
-        # As a fallback we use the first specified format in our formats mapping.
+    def _get_format(self, name, content):
+        # If the format was set use it.
+        if self.field.format:
+            return self.field.format
+
+        # Otherwise try to guess the original format.
+        elif format := self._guess_original_format(name, content):
+            return format
+
+        # As a fallback take the first format of our formats mapping.
         else:
             self.FORMATS_TO_EXT.keys()[0]
 
-    def _get_name(self, name, format):
+    def _fix_file_extension(self, name, format):
         ext = self.FORMATS_TO_EXT[format]
         name, _ = os.path.splitext(name)
         return f'{name}{ext}'
 
     def _resize_content(self, name, content):
-        image = Image.open(content)
+        image = Image.open(content.open())
+
+        # Get and check size. Use original size as fallback. Be sure to only
+        # downscale the image.
         width, height = self.field.size
-
-        # Use original values as fallback.
         width, height = (width or image.width, height or image.height)
+        do_resizing = bool(width < image.width or height < image.height)
 
-        # At least one value should be smaller to not increasing the image.
-        if width < image.width or height < image.height:
+        # Get original and target format. Check if the image must be converted.
+        original_format = self._guess_original_format(name, content)
+        target_format = self._get_format(name, content)
+        do_conversion = bool(target_format != original_format)
+
+        if do_resizing:
             image.thumbnail((width, height), self.field.resample)
 
-        # Save image with new format. The quality keyword will be ignored for
-        # formats not supporting it.
-        format = self._get_format(name, content)
-        new_content = BytesIO()
-        image.save(new_content, format=format, quality=self.field.quality)
+        if do_resizing or do_conversion:
+            # Setup parameter for saving the image.
+            params = dict(format=target_format)
+            if self.field.quality:
+                params['quality'] = self.field.quality
 
-        # Fix the filename extension due to the new format.
-        name = self._get_name(name, format)
-        return name, new_content
+            # Saving the image using the target format.
+            new_content = BytesIO()
+            image.save(new_content, **params)
+            new_content.seek(0)
+
+            # Fix the file extension and return new name and content.
+            new_name = self._fix_file_extension(name, target_format)
+            return new_name, File(new_content)
+        else:
+            return name, content
 
 
 class HashedImageFieldFile(HashedFileNameMixin, files.ImageFieldFile):
