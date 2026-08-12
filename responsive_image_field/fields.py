@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models.fields import files
 from PIL import Image
 from PIL.Image import Resampling
+from .utils import get_md5_hash
 
 
 class HashedFileNameMixin:
@@ -18,27 +19,10 @@ class HashedFileNameMixin:
     """
 
     def save(self, name, content, save=True):
-        if file_hash := self._hash_content(content):
+        if hash := get_md5_hash(content):
             name, ext = os.path.splitext(name)
-            name = f'{name}.{file_hash}{ext}'
+            name = f'{name}.{hash}{ext}'
         return super().save(name, content, save=save)
-
-    def _hash_content(self, content):
-        """
-        Compute MD5 hash from file-like content.
-        """
-        try:
-            # Read and hash in chunks.
-            md5_hash = hashlib.md5()
-            for chunk in iter(lambda: content.read(8192), b''):
-                md5_hash.update(chunk)
-
-            # Seek back to 0.
-            content.seek(0)
-        except Exception:
-            return None
-        else:
-            return md5_hash.hexdigest()
 
 
 class ResizedImageMixin:
