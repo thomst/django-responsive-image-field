@@ -150,6 +150,17 @@ class ResizedImageFieldMixin:
         self.resample = resample
         super().__init__(*args, **kwargs)
 
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        kwargs['size'] = self.size
+        if self.format:
+            kwargs["format"] = self.format
+        if self.quality:
+            kwargs["quality"] = self.quality
+        if self.resample:
+            kwargs["resample"] = self.resample
+        return name, path, args, kwargs
+
 
 class ResizedImageField(ResizedImageFieldMixin, models.ImageField):
     """
