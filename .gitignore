@@ -2,7 +2,7 @@
 /.coveralls.yml
 /.python-version
 /*.sh
-/django_reorder_items_widget.egg-info/
+/django_responsive_image_field.egg-info/
 /build/
 /dist/
 /.tox/
