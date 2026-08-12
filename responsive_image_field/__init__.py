@@ -1,15 +1,11 @@
 from .fields import (
-    HashedFileNameMixin,
-    HashedFileField,
     HashedImageField,
-    ResizeImageField,
-    HashedResizeImageField,
+    ResizedImageField,
+    HashedResizedImageField,
 )
 
 __all__ = [
-    'HashedFileNameMixin',
-    'HashedFileField',
     'HashedImageField',
-    'ResizeImageField',
-    'HashedResizeImageField',
+    'ResizedImageField',
+    'HashedResizedImageField',
 ]
