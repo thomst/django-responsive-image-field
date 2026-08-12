@@ -184,6 +184,16 @@ class ResizedImageField(ResizedImageFieldMixin, models.ImageField):
     attr_class = ResizedImageFieldFile
 
 
+class HashedImageField(models.ImageField):
+    """
+    The same as :class:`~.ResizedImageField`. But also incorporate the md5 hash
+    of the image into its filename.
+
+    This is useful for an efficient caching mechanism using immutable resources.
+    """
+    attr_class = HashedImageFieldFile
+
+
 class HashedResizedImageField(ResizedImageFieldMixin, models.ImageField):
     """
     The same as :class:`~.ResizedImageField`. But also incorporate the md5 hash
