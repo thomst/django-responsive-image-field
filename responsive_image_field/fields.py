@@ -1,10 +1,10 @@
 import os
 from io import BytesIO
+from PIL import Image
+from PIL.Image import Resampling
 from django.db import models
 from django.core.files.base import File
 from django.db.models.fields import files
-from PIL import Image
-from PIL.Image import Resampling
 from .utils import get_md5_hash
 
 
