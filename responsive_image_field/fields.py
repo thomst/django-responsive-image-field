@@ -156,7 +156,7 @@ class ResizedImageFieldMixin:
             kwargs["format"] = self.format
         if self.quality:
             kwargs["quality"] = self.quality
-        if self.resample:
+        if self.resample != Resampling.LANCZOS:
             kwargs["resample"] = self.resample
         return name, path, args, kwargs
 
