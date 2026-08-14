@@ -1,4 +1,3 @@
-import hashlib
 import os
 from io import BytesIO
 from django.db import models
