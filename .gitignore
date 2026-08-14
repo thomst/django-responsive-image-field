@@ -11,3 +11,5 @@
 db.sqlite3*
 my.cnf
 __pycache__/
+/media/
+!/media/test-image.png
