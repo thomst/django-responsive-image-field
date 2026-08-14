@@ -8,7 +8,7 @@ from .models import TestModel
 
 
 # Using a relative path to prevent a SuspiciousFileOperation exception.
-TEST_IMAGE = os.path.relpath(settings.MEDIA_ROOT / 'test-image-200x200.png')
+TEST_IMAGE = os.path.relpath(settings.MEDIA_ROOT / 'test-image.png')
 
 
 class SetupImageFieldsMixin:
