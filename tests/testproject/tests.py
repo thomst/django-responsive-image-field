@@ -1,5 +1,4 @@
 import os
-import hashlib
 from django.core.files.base import File
 from django.db import models
 from django.conf import settings
