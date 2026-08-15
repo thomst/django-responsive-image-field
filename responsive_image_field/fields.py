@@ -19,9 +19,10 @@ class HashedFileNameMixin:
     """
 
     def save(self, name, content, save=True):
-        if hash := get_md5_hash(content):
-            name, ext = os.path.splitext(name)
-            name = f'{name}.{hash}{ext}'
+        hash = get_md5_hash(content)
+        _, ext = os.path.splitext(name)
+        name = f'{hash}{ext}'
+        content.name = name
         return super().save(name, content, save=save)
 
 
