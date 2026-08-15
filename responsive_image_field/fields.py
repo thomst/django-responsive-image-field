@@ -221,11 +221,44 @@ class ResponsiveImageFileDescriptor(files.ImageFileDescriptor):
     """
     def __set__(self, instance, value):
         super().__set__(instance, value)
-        for field in self.field.fields.values():
-            setattr(instance, field.name, value)
+        for name in self.field.fields.values():
+            setattr(instance, name, value)
 
 
-class ResponsiveImageField(models.ImageField):
+class OriginalResponsiveImageField(models.ImageField):
+    """
+
+    """
+    attr_class = ResponsiveImageFieldFile
+    descriptor_class = ResponsiveImageFileDescriptor
+
+    def __init__(self, fields, **kwargs):
+        super().__init__(**kwargs)
+        self._fields = fields
+
+    @property
+    def fields(self):
+        return self._fields
+
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        args += (self._fields,)
+        return name, path, args, kwargs
+
+
+class ResizedResponsiveImageField(HashedResizedImageField):
+    """
+    TODO
+    """
+    def formfield(self, **kwargs):
+        formfield = super().formfield(**kwargs)
+        formfield.disabled = True
+        return formfield
+
+
+# FIXME: Unfortunately are the responsive images saved to storage but their path
+# is not used for the db image field. Instead the original filename is saved.
+class ResponsiveImageField:
     """
     A responsive image field stores resized copys of an image using the
     :class:`~.HashedResizedImageField`.
@@ -242,18 +275,17 @@ class ResponsiveImageField(models.ImageField):
         TODO
     """
 
-    attr_class = ResponsiveImageFieldFile
-    descriptor_class = ResponsiveImageFileDescriptor
-    image_field_class = HashedResizedImageField
+    original_image_field_class = OriginalResponsiveImageField
+    image_field_class = ResizedResponsiveImageField
 
-    def __init__(self, sizes, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, sizes, **kwargs):
         self.sizes = sizes
         self.kwargs = kwargs
-        self.fields = dict()  # Make this a property.
 
-    def _get_image_field_kwargs(self, values):
+    def _get_image_field_kwargs(self, values, key):
         kwargs = self.kwargs.copy()
+        if verbose_name := kwargs.get('verbose_name'):
+            kwargs['verbose_name'] = f'{verbose_name} [{key}]'
         if isinstance(values, dict):
             kwargs.update(values)
         else:
@@ -261,23 +293,16 @@ class ResponsiveImageField(models.ImageField):
         return kwargs
 
     def contribute_to_class(self, cls, name):
-        super().contribute_to_class(cls, name)
-
         # Create fields for resized images.
-        # FIXME: makemigrations creates a migration for each field. But migrate
-        # tries to create those field double - once based on the migration file
-        # and once based on this code of contribute to class.
+        fields = dict()
         for key, values in self.sizes.items():
             field_name = f'{name}_{key}'
-            kwargs = self._get_image_field_kwargs(values)
+            kwargs = self._get_image_field_kwargs(values, key)
             field = self.image_field_class(**kwargs)
-            # Skip the formfield for the resized images.
-            # FIXME: Return an readonly image form field.
-            field.formfield = lambda *a, **kw: None
             field.contribute_to_class(cls, field_name)
-            self.fields[key] = field
+            fields[key] = field.name
 
-    def deconstruct(self):
-        name, path, args, kwargs = super().deconstruct()
-        args.append(self.sizes)
-        return name, path, args, kwargs
+        # Create image field for original image.
+        original_field = self.original_image_field_class(fields, **self.kwargs)
+        original_field.contribute_to_class(cls, name)
+
