@@ -84,7 +84,7 @@ class ResizedImageMixin:
         return f'{name}{ext}'
 
     def _resize_content(self, name, content):
-        image = Image.open(content)
+        image = Image.open(content.open())
 
         # Get and check size. Use original size as fallback. Be sure to only
         # downscale the image.
