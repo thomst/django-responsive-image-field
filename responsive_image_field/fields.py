@@ -22,7 +22,6 @@ class HashedFileNameMixin:
         hash = get_md5_hash(content)
         _, ext = os.path.splitext(name)
         name = f'{hash}{ext}'
-        content.name = name
         return super().save(name, content, save=save)
 
 
