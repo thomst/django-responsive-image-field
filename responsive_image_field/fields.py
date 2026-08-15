@@ -207,11 +207,12 @@ class ResponsiveImageFieldFile(files.ImageFieldFile):
     """
 
     """
-    def __getattr__(self, name):
-        if name in self.field.fields:
-            return getattr(self.instance, self.field.fields[name].name)
+    def __getattr__(self, key):
+        if key in self.field.fields:
+            return getattr(self.instance, self.field.fields[key])
         else:
-            raise AttributeError(f'{name} is not an attribute of {self}')
+            # TODO: Use standard message format for attribute errors.
+            raise AttributeError(f'{key} is not an attribute of {self}')
 
 
 class ResponsiveImageFileDescriptor(files.ImageFileDescriptor):
