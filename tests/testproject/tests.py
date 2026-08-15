@@ -109,3 +109,34 @@ class Test(TestCase):
         self.assertTrue(image.name.endswith('png'))
         self.assertEqual(image.width, 200)
         self.assertEqual(image.height, 200)
+
+    @save_image_to_field(['responsive'])
+    def test_responsive(self):
+        image = self.obj.responsive
+        self.assertTrue(image.name.endswith('png'))
+        self.assertEqual(image.width, 200)
+        self.assertEqual(image.height, 200)
+
+        image = self.obj.responsive.large
+        hash = get_md5_hash(image)
+        self.assertEqual(image, self.obj.responsive_large)
+        self.assertTrue(hash in image.name)
+        self.assertTrue(image.name.endswith('avif'))
+        self.assertEqual(image.width, 150)
+        self.assertEqual(image.height, 150)
+
+        image = self.obj.responsive.medium
+        hash = get_md5_hash(image)
+        self.assertEqual(image, self.obj.responsive_medium)
+        self.assertTrue(hash in image.name)
+        self.assertTrue(image.name.endswith('avif'))
+        self.assertEqual(image.width, 100)
+        self.assertEqual(image.height, 100)
+
+        image = self.obj.responsive.small
+        hash = get_md5_hash(image)
+        self.assertEqual(image, self.obj.responsive_small)
+        self.assertTrue(hash in image.name)
+        self.assertTrue(image.name.endswith('avif'))
+        self.assertEqual(image.width, 50)
+        self.assertEqual(image.height, 50)

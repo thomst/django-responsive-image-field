@@ -13,3 +13,10 @@ class TestModel(models.Model):
     converted_low_quality = fields.ResizedImageField((120, 120), 'AVIF', quality=10, null=True, blank=True)
     hashed_resized = fields.HashedResizedImageField((120, 120), null=True, blank=True)
     hashed = fields.HashedImageField(null=True, blank=True)
+
+    SIZES = dict(
+        small=dict(size=(50, 50), format='AVIF'),
+        medium=dict(size=(100, 100), format='AVIF'),
+        large=dict(size=(150, 150), format='AVIF'),
+    )
+    responsive = fields.ResponsiveImageField(SIZES, null=True, blank=True)
