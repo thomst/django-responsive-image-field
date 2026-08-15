@@ -16,20 +16,28 @@ def save_image_to_field(names):
 
         def test_wrapper(self):
 
-            # Save the image to the field
+            # Save images to the fields.
             with open(TEST_IMAGE, 'rb') as img:
                 for name in names:
                     setattr(self.obj, name, File(img))
                 self.obj.save()
 
             # Run the test.
-            test(self)
-
-            # Delete file and set image field to None.
-            for name in names:
-                getattr(self.obj, name).delete()
-                setattr(self.obj, name, None)
-            self.obj.save()
+            try:
+                test(self)
+            except:
+                raise
+            finally:
+                # Delete image files and set image fields to None.
+                for name in names:
+                    field = getattr(self.obj, name).field
+                    if hasattr(field, 'fields'):
+                        for name_ in field.fields.values():
+                            getattr(self.obj, name_).delete()
+                            setattr(self.obj, name_, None)
+                    getattr(self.obj, name).delete()
+                    setattr(self.obj, name, None)
+                self.obj.save()
 
         return test_wrapper
 
