@@ -256,8 +256,6 @@ class ResizedResponsiveImageField(HashedResizedImageField):
         return formfield
 
 
-# FIXME: Unfortunately are the responsive images saved to storage but their path
-# is not used for the db image field. Instead the original filename is saved.
 class ResponsiveImageField:
     """
     A responsive image field stores resized copys of an image using the
@@ -293,16 +291,17 @@ class ResponsiveImageField:
         return kwargs
 
     def contribute_to_class(self, cls, name):
+        # Create image field for original image.
+        # Mind: It is crucial to create the original field first. Otherwise
+        # everything works fine except saving the resized images' paths to the
+        # database. For any reason we only get the original image name saved.
+        fields = dict((k, f'{name}_{k}') for k in self.sizes.keys())
+        original_field = self.original_image_field_class(fields, **self.kwargs)
+        original_field.contribute_to_class(cls, name)
+
         # Create fields for resized images.
-        fields = dict()
         for key, values in self.sizes.items():
             field_name = f'{name}_{key}'
             kwargs = self._get_image_field_kwargs(values, key)
             field = self.image_field_class(**kwargs)
             field.contribute_to_class(cls, field_name)
-            fields[key] = field.name
-
-        # Create image field for original image.
-        original_field = self.original_image_field_class(fields, **self.kwargs)
-        original_field.contribute_to_class(cls, name)
-
