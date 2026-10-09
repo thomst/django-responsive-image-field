@@ -159,6 +159,8 @@ class Test(TestCase):
         self.assertTrue(image.name.endswith('avif'))
         self.assertEqual(image.width, 150)
         self.assertEqual(image.height, 150)
+        self.assertEqual(self.obj.responsive_large_width, 150)
+        self.assertEqual(self.obj.responsive_large_height, 150)
 
         image = self.obj.responsive.medium
         hash = get_md5_hash(image)
@@ -167,6 +169,8 @@ class Test(TestCase):
         self.assertTrue(image.name.endswith('avif'))
         self.assertEqual(image.width, 100)
         self.assertEqual(image.height, 100)
+        self.assertEqual(self.obj.responsive_medium_width, 100)
+        self.assertEqual(self.obj.responsive_medium_height, 100)
 
         image = self.obj.responsive.small
         hash = get_md5_hash(image)
@@ -175,3 +179,5 @@ class Test(TestCase):
         self.assertTrue(image.name.endswith('avif'))
         self.assertEqual(image.width, 50)
         self.assertEqual(image.height, 50)
+        self.assertEqual(self.obj.responsive_small_width, 50)
+        self.assertEqual(self.obj.responsive_small_height, 50)
