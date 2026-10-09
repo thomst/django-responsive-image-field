@@ -13,7 +13,7 @@ class HashedNameMixin:
     TODO
     """
     def __set__(self, instance, value):
-        if value:
+        if isinstance(value, File):
             _, ext = os.path.splitext(value.name)
             value.name = f'{get_md5_hash(value)}{ext}'
         super().__set__(instance, value)
@@ -48,7 +48,7 @@ class ResizedImageMixin:
     }
 
     def __set__(self, instance, value):
-        if value:
+        if isinstance(value, File):
             name, value = self._resize_content(value.name, value)
             value.name = name
         super().__set__(instance, value)
