@@ -209,8 +209,8 @@ class ResponsiveImageFieldFile(files.ImageFieldFile):
         if key in self.field.fields:
             return getattr(self.instance, self.field.fields[key])
         else:
-            # TODO: Use standard message format for attribute errors.
-            raise AttributeError(f'{key} is not an attribute of {self}')
+            msg = f"type object '{type(self).__name__}' has no attribute '{key}'"
+            raise AttributeError(msg)
 
 
 class ResponsiveImageFileDescriptor(files.ImageFileDescriptor):
