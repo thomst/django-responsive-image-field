@@ -8,26 +8,21 @@ from django.db.models.fields import files
 from .utils import get_md5_hash
 
 
-class HashedFileNameMixin:
+class HashedNameMixin:
     """
-    Mixin for Django FieldFile and ImageFieldFile that incorporates an MD5 hash
-    of the file content into the filename.
-
-    This ensures that:
-    - Files with identical content get the same hash (deduplication)
-    - Files are uniquely identified by their content
+    TODO
     """
-
-    def save(self, name, content, save=True):
-        hash = get_md5_hash(content)
-        _, ext = os.path.splitext(name)
-        name = f'{hash}{ext}'
-        return super().save(name, content, save=save)
+    def __set__(self, instance, value):
+        if value:
+            _, ext = os.path.splitext(value.name)
+            value.name = f'{get_md5_hash(value)}{ext}'
+        super().__set__(instance, value)
 
 
 class ResizedImageMixin:
     """
-    Mixin for Django ImageFieldFile .
+    Mixin for ImageFileDescriptor. Resizing the image assigned to the image
+    field.
     """
 
     EXT_TO_FORMATS = {
@@ -52,9 +47,11 @@ class ResizedImageMixin:
         'BMP': '.bmp',
     }
 
-    def save(self, name, content, save=True):
-        name, content = self._resize_content(name, content)
-        return super().save(name, content, save)
+    def __set__(self, instance, value):
+        if value:
+            name, value = self._resize_content(value.name, value)
+            value.name = name
+        super().__set__(instance, value)
 
     def _guess_original_format(self, name, content):
         _, ext = os.path.splitext(name)
@@ -118,20 +115,21 @@ class ResizedImageMixin:
             return name, content
 
 
-class HashedImageFieldFile(HashedFileNameMixin, files.ImageFieldFile):
+class HashedNameImageFileDescriptor(HashedNameMixin, files.ImageFileDescriptor):
     """
-    ImageFieldFile that incorporates MD5 file content hash into the filename.
-    """
-
-
-class ResizedImageFieldFile(ResizedImageMixin, files.ImageFieldFile):
-    """
-    ImageFieldFile that incorporates MD5 file content hash into the filename.
+    TODO
     """
 
 
-class HashedResizedImageFieldFile(ResizedImageMixin, HashedFileNameMixin, files.ImageFieldFile):
+class ResizedImageFileDescriptor(ResizedImageMixin, files.ImageFileDescriptor):
     """
+    TODO
+    """
+
+
+class HashedResizedImageFileDescriptor(ResizedImageMixin, HashedNameMixin, files.ImageFileDescriptor):
+    """
+    TODO
     """
 
 
@@ -161,6 +159,16 @@ class ResizedImageFieldMixin:
         return name, path, args, kwargs
 
 
+class HashedImageField(models.ImageField):
+    """
+    The same as :class:`~.ResizedImageField`. But also incorporate the md5 hash
+    of the image into its filename.
+
+    This is useful for an efficient caching mechanism using immutable resources.
+    """
+    descriptor_class = HashedNameImageFileDescriptor
+
+
 class ResizedImageField(ResizedImageFieldMixin, models.ImageField):
     """
     Image field that resizes the image before storing it.
@@ -180,17 +188,7 @@ class ResizedImageField(ResizedImageFieldMixin, models.ImageField):
     :param Resampling resample: resampling filter used for resizing
                                 (optional, defaults to LANCZOS)
     """
-    attr_class = ResizedImageFieldFile
-
-
-class HashedImageField(models.ImageField):
-    """
-    The same as :class:`~.ResizedImageField`. But also incorporate the md5 hash
-    of the image into its filename.
-
-    This is useful for an efficient caching mechanism using immutable resources.
-    """
-    attr_class = HashedImageFieldFile
+    descriptor_class = ResizedImageFileDescriptor
 
 
 class HashedResizedImageField(ResizedImageFieldMixin, models.ImageField):
@@ -200,7 +198,7 @@ class HashedResizedImageField(ResizedImageFieldMixin, models.ImageField):
 
     This is useful for an efficient caching mechanism using immutable resources.
     """
-    attr_class = HashedResizedImageFieldFile
+    descriptor_class = HashedResizedImageFileDescriptor
 
 
 class ResponsiveImageFieldFile(files.ImageFieldFile):
