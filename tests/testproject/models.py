@@ -14,6 +14,38 @@ class TestModel(models.Model):
     hashed_resized = fields.HashedResizedImageField((120, 120), null=True, blank=True)
     hashed = fields.HashedImageField(null=True, blank=True)
 
+    # HashedResizedImage with dimension fields.
+    hashed_resized_with_dimensions = fields.HashedResizedImageField(
+        (120, 120),
+        null=True,
+        blank=True,
+        width_field='hashed_resized_width',
+        height_field='hashed_resized_height',
+    )
+    hashed_resized_width = models.SmallIntegerField(null=True, blank=True)
+    hashed_resized_height = models.SmallIntegerField(null=True, blank=True)
+
+    # Resized ImageField with dimension fields.
+    resized_with_dimensions = fields.ResizedImageField(
+        (80, 80),
+        null=True,
+        blank=True,
+        width_field='resized_with_dimensions_width',
+        height_field='resized_with_dimensions_height',
+    )
+    resized_with_dimensions_width = models.SmallIntegerField(null=True, blank=True)
+    resized_with_dimensions_height = models.SmallIntegerField(null=True, blank=True)
+
+    # Resized ImageField with dimension fields.
+    hashed_with_dimensions = fields.HashedImageField(
+        null=True,
+        blank=True,
+        width_field='hashed_with_dimensions_width',
+        height_field='hashed_with_dimensions_height',
+    )
+    hashed_with_dimensions_width = models.SmallIntegerField(null=True, blank=True)
+    hashed_with_dimensions_height = models.SmallIntegerField(null=True, blank=True)
+
     SIZES = dict(
         small=dict(size=(50, 50), format='AVIF'),
         medium=dict(size=(100, 100), format='AVIF'),

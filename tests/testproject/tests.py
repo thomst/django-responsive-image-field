@@ -118,6 +118,33 @@ class Test(TestCase):
         self.assertEqual(image.width, 200)
         self.assertEqual(image.height, 200)
 
+    @save_image_to_field(['hashed_resized_with_dimensions'])
+    def test_hashed_resized_with_dimensions(self):
+        image = self.obj.hashed_resized_with_dimensions
+        hash = get_md5_hash(image)
+        self.assertTrue(hash in image.name)
+        self.assertTrue(image.name.endswith('png'))
+        self.assertEqual(self.obj.hashed_resized_width, image.width)
+        self.assertEqual(self.obj.hashed_resized_height, image.height)
+        self.assertEqual(image.width, 120)
+        self.assertEqual(image.height, 120)
+
+    @save_image_to_field(['hashed_with_dimensions'])
+    def test_hashed_with_dimensions(self):
+        image = self.obj.hashed_with_dimensions
+        self.assertTrue(image.name.endswith('png'))
+        self.assertEqual(self.obj.hashed_with_dimensions_width, image.width)
+        self.assertEqual(self.obj.hashed_with_dimensions_height, image.height)
+
+    @save_image_to_field(['resized_with_dimensions'])
+    def test_resized_with_dimensions(self):
+        image = self.obj.resized_with_dimensions
+        self.assertTrue(image.name.endswith('png'))
+        self.assertEqual(self.obj.resized_with_dimensions_width, image.width)
+        self.assertEqual(self.obj.resized_with_dimensions_height, image.height)
+        self.assertEqual(image.width, 80)
+        self.assertEqual(image.height, 80)
+
     @save_image_to_field(['responsive'])
     def test_responsive(self):
         image = self.obj.responsive
