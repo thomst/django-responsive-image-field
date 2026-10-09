@@ -244,16 +244,6 @@ class OriginalResponsiveImageField(models.ImageField):
         return name, path, args, kwargs
 
 
-class ResizedResponsiveImageField(HashedResizedImageField):
-    """
-    TODO
-    """
-    def formfield(self, **kwargs):
-        formfield = super().formfield(**kwargs)
-        formfield.disabled = True
-        return formfield
-
-
 class ResponsiveImageField:
     """
     A responsive image field stores resized copys of an image using the
@@ -272,34 +262,51 @@ class ResponsiveImageField:
     """
 
     original_image_field_class = OriginalResponsiveImageField
-    image_field_class = ResizedResponsiveImageField
+    image_field_class = HashedResizedImageField
+    dimension_field_class = models.SmallIntegerField
 
     def __init__(self, sizes, **kwargs):
         self.sizes = sizes
         self.kwargs = kwargs
 
-    def _get_image_field_kwargs(self, values, key):
-        kwargs = self.kwargs.copy()
-        if verbose_name := kwargs.get('verbose_name'):
-            kwargs['verbose_name'] = f'{verbose_name} [{key}]'
-        if isinstance(values, dict):
-            kwargs.update(values)
-        else:
-            kwargs['size'] = values
-        return kwargs
+    def _add_rezised_image_field(self, cls, name, key, kwargs):
+        common_kwargs = dict(
+            editable=False,
+            blank=True,
+            null=self.kwargs.get('null', False),
+        )
+
+        # Create image field.
+        field_name = f'{name}_{key}'
+        kwargs.update(dict(
+            **common_kwargs,
+            verbose_name=f'{name} [{key}]',
+            width_field=f'{field_name}_width',
+            height_field=f'{field_name}_height',
+        ))
+        field = self.image_field_class(**kwargs)
+        field.contribute_to_class(cls, field_name)
+
+        # Create dimension fields.
+        for dimension in ['width', 'height']:
+            dimension_field_name = f'{field_name}_{dimension}'
+            dimension_kwargs = dict(
+                verbose_name=f'{name} [{key}-{dimension}]',
+                **common_kwargs,
+            )
+            dimension_field = self.dimension_field_class(**dimension_kwargs)
+            dimension_field.contribute_to_class(cls, dimension_field_name)
 
     def contribute_to_class(self, cls, name):
         # Create image field for original image.
         # Mind: It is crucial to create the original field first. Otherwise
         # everything works fine except saving the resized images' paths to the
         # database. For any reason we only get the original image name saved.
-        fields = dict((k, f'{name}_{k}') for k in self.sizes.keys())
-        original_field = self.original_image_field_class(fields, **self.kwargs)
+        kwargs = self.kwargs.copy()
+        kwargs['fields'] = dict((k, f'{name}_{k}') for k in self.sizes.keys())
+        original_field = self.original_image_field_class(**kwargs)
         original_field.contribute_to_class(cls, name)
 
-        # Create fields for resized images.
-        for key, values in self.sizes.items():
-            field_name = f'{name}_{key}'
-            kwargs = self._get_image_field_kwargs(values, key)
-            field = self.image_field_class(**kwargs)
-            field.contribute_to_class(cls, field_name)
+        # Create image and dimension fields for resized images.
+        for key, kwargs in self.sizes.items():
+            self._add_rezised_image_field(cls, name, key, kwargs)
