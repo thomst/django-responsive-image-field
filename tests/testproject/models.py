@@ -46,6 +46,7 @@ class TestModel(models.Model):
     hashed_with_dimensions_width = models.SmallIntegerField(null=True, blank=True)
     hashed_with_dimensions_height = models.SmallIntegerField(null=True, blank=True)
 
+    # ResponsiveImageField.
     SIZES = dict(
         small=dict(size=(50, 50), format='AVIF'),
         medium=dict(size=(100, 100), format='AVIF'),
