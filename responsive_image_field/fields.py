@@ -278,9 +278,10 @@ class ResponsiveImageField:
 
         # Create image field.
         field_name = f'{name}_{key}'
+        size = f'{kwargs["size"][0]} x {kwargs["size"][1]}'
         kwargs.update(dict(
             **common_kwargs,
-            verbose_name=f'{name} [{key}]',
+            verbose_name=f'{name} [{key}: {size}]',
             width_field=f'{field_name}_width',
             height_field=f'{field_name}_height',
         ))
