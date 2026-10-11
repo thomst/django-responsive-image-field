@@ -226,9 +226,15 @@ class ResponsiveImageFileDescriptor(files.ImageFileDescriptor):
     TODO
     """
     def __set__(self, instance, value):
+        # We use the previous value technique to avoid updating the resized
+        # images on instance initialization. See the comments in the `__set__`
+        # method of the `ImageFileDescriptor` class of django's source code.
+        previous_value = instance.__dict__.get(self.field.attname)
         super().__set__(instance, value)
-        for name in self.field.fields.values():
-            setattr(instance, name, value)
+        if previous_value is None:
+            pass
+        elif isinstance(value, File) or value is None:
+            self.field.update_resized_images(instance, value)
 
 
 class OriginalResponsiveImageField(models.ImageField):
@@ -245,6 +251,10 @@ class OriginalResponsiveImageField(models.ImageField):
     @property
     def fields(self):
         return self._fields
+
+    def update_resized_images(self, instance, value):
+        for name in self._fields.values():
+            setattr(instance, name, value)
 
     def get_resized_image(self, instance, key):
         return getattr(instance, self._fields[key])
