@@ -181,3 +181,11 @@ class Test(TestCase):
         self.assertEqual(image.height, 50)
         self.assertEqual(self.obj.responsive_small_width, 50)
         self.assertEqual(self.obj.responsive_small_height, 50)
+
+        # Set image field to None and check that all responsive images are deleted.
+        self.obj.responsive = None
+        self.obj.save()
+        for size in ('small', 'medium', 'large'):
+            image = getattr(self.obj.responsive, size)
+            self.assertFalse(getattr(self.obj.responsive, size))
+            self.assertFalse(getattr(self.obj, f'responsive_{size}'))
