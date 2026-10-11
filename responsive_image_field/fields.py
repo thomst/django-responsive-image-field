@@ -13,7 +13,11 @@ class HashedNameMixin:
     TODO
     """
     def __set__(self, instance, value):
-        if isinstance(value, File):
+        # We use the previous value technique to avoid updating the resized
+        # images on instance initialization. See the comments in the `__set__`
+        # method of the `ImageFileDescriptor` class of django's source code.
+        previous_value = instance.__dict__.get(self.field.attname)
+        if previous_value is not None and isinstance(value, File):
             _, ext = os.path.splitext(value.name)
             value.name = f'{get_md5_hash(value)}{ext}'
         super().__set__(instance, value)
@@ -48,7 +52,11 @@ class ResizedImageMixin:
     }
 
     def __set__(self, instance, value):
-        if isinstance(value, File):
+        # We use the previous value technique to avoid updating the resized
+        # images on instance initialization. See the comments in the `__set__`
+        # method of the `ImageFileDescriptor` class of django's source code.
+        previous_value = instance.__dict__.get(self.field.attname)
+        if previous_value is not None and isinstance(value, File):
             name, value = self._resize_content(value.name, value)
             value.name = name
         super().__set__(instance, value)
