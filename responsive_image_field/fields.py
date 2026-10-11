@@ -255,6 +255,13 @@ class OriginalResponsiveImageField(models.ImageField):
         return name, path, args, kwargs
 
 
+class ResizedResponsiveImageField(HashedResizedImageField):
+    def formfield(self, **kwargs):
+        formfield = super().formfield(**kwargs)
+        formfield.disabled = True
+        return formfield
+
+
 class ResponsiveImageField:
     """
     A responsive image field stores resized copys of an image using the
@@ -273,7 +280,7 @@ class ResponsiveImageField:
     """
 
     original_image_field_class = OriginalResponsiveImageField
-    image_field_class = HashedResizedImageField
+    image_field_class = ResizedResponsiveImageField
     dimension_field_class = models.SmallIntegerField
 
     def __init__(self, sizes, **kwargs):
@@ -282,7 +289,6 @@ class ResponsiveImageField:
 
     def _add_rezised_image_field(self, cls, name, key, kwargs):
         common_kwargs = dict(
-            editable=False,
             blank=True,
             null=self.kwargs.get('null', False),
         )
@@ -304,6 +310,7 @@ class ResponsiveImageField:
             dimension_field_name = f'{field_name}_{dimension}'
             dimension_kwargs = dict(
                 verbose_name=f'{name} [{key}-{dimension}]',
+                editable=False,
                 **common_kwargs,
             )
             dimension_field = self.dimension_field_class(**dimension_kwargs)
