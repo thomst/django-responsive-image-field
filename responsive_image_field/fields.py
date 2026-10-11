@@ -214,9 +214,9 @@ class ResponsiveImageFieldFile(files.ImageFieldFile):
     TODO
     """
     def __getattr__(self, key):
-        if key in self.field.fields:
-            return getattr(self.instance, self.field.fields[key])
-        else:
+        try:
+            return self.field.get_resized_image(self.instance, key)
+        except KeyError:
             msg = f"type object '{type(self).__name__}' has no attribute '{key}'"
             raise AttributeError(msg)
 
@@ -245,6 +245,9 @@ class OriginalResponsiveImageField(models.ImageField):
     @property
     def fields(self):
         return self._fields
+
+    def get_resized_image(self, instance, key):
+        return getattr(instance, self._fields[key])
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
