@@ -1,8 +1,9 @@
 import os
 from django.core.files.base import File
-from django.db import models
+from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.test import TestCase
+from django.urls import reverse
 from responsive_image_field.utils import get_md5_hash
 from .models import TestModel
 
@@ -44,11 +45,21 @@ def save_image_to_field(names):
     return decorator
 
 
+def create_admin_user():
+    User = get_user_model()
+    return User.objects.create_superuser(
+        username='admin',
+        email='admin@example.com',
+        password='adminpassword'
+    )
+
+
 class Test(TestCase):
 
     def setUp(self):
         self.obj = TestModel()
         self.obj.save()
+        self.admin_user = create_admin_user()
 
     def tearDown(self):
         self.obj.delete()
@@ -202,6 +213,24 @@ class Test(TestCase):
         self.assertFalse(os.path.exists(small_file))
         self.assertFalse(os.path.exists(medium_file))
         self.assertFalse(os.path.exists(large_file))
+        for size in ('small', 'medium', 'large'):
+            self.assertFalse(getattr(self.obj.responsive, size))
+            self.assertFalse(getattr(self.obj, f'responsive_{size}'))
+
+    @save_image_to_field(['responsive'])
+    def test_responsive_clear(self):
+        self.client.force_login(self.admin_user)
+        url = reverse('admin:testproject_testmodel_change', args=[self.obj.pk])
+        data = {
+            'responsive': '',
+            'responsive-clear': 'on',
+            '_continue': 'Save and continue editing',
+            }
+        response = self.client.post(url, data, follow=True)
+        self.assertEqual(response.redirect_chain[0][1], 302)
+        self.assertEqual(response.status_code, 200)
+        self.obj.refresh_from_db()
+        self.assertFalse(self.obj.responsive)
         for size in ('small', 'medium', 'large'):
             self.assertFalse(getattr(self.obj.responsive, size))
             self.assertFalse(getattr(self.obj, f'responsive_{size}'))
