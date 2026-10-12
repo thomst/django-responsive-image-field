@@ -220,6 +220,10 @@ class ResponsiveImageFieldFile(files.ImageFieldFile):
             msg = f"type object '{type(self).__name__}' has no attribute '{key}'"
             raise AttributeError(msg)
 
+    def delete(self, save=True):
+        self.field.delete_resized_images(self.instance, save=save)
+        super().delete(save=save)
+
 
 class ResponsiveImageFileDescriptor(files.ImageFileDescriptor):
     """
@@ -255,6 +259,10 @@ class OriginalResponsiveImageField(models.ImageField):
     def update_resized_images(self, instance, value):
         for name in self._fields.values():
             setattr(instance, name, value)
+
+    def delete_resized_images(self, instance, save=True):
+        for name in self._fields.values():
+            getattr(instance, name).delete(save=save)
 
     def get_resized_image(self, instance, key):
         return getattr(instance, self._fields[key])
