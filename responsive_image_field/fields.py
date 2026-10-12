@@ -256,7 +256,12 @@ class OriginalResponsiveImageField(models.ImageField):
 
     def update_resized_images(self, instance, value):
         for name in self._fields.values():
-            setattr(instance, name, value)
+            if value:
+                setattr(instance, name, value)
+            else:
+                del getattr(instance, name).file
+                getattr(instance, name).name = None
+                setattr(instance, name, None)
 
     def delete_resized_images(self, instance, save=True):
         for name in self._fields.values():
