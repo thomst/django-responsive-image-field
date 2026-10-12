@@ -339,9 +339,8 @@ class ResponsiveImageField:
         # Mind: It is crucial to create the original field first. Otherwise
         # everything works fine except saving the resized images' paths to the
         # database. For any reason we only get the original image name saved.
-        kwargs = self.kwargs.copy()
-        kwargs['fields'] = dict((k, f'{name}_{k}') for k in self.sizes.keys())
-        original_field = self.original_image_field_class(**kwargs)
+        fields = dict((k, f'{name}_{k}') for k in self.sizes.keys())
+        original_field = self.original_image_field_class(fields, **self.kwargs)
         original_field.contribute_to_class(cls, name)
 
         # Create image and dimension fields for resized images.
