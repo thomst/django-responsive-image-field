@@ -189,3 +189,19 @@ class Test(TestCase):
         for size in ('small', 'medium', 'large'):
             self.assertFalse(getattr(self.obj.responsive, size))
             self.assertFalse(getattr(self.obj, f'responsive_{size}'))
+
+    @save_image_to_field(['responsive'])
+    def test_responsive_delete(self):
+        original_file = self.obj.responsive.path
+        small_file = self.obj.responsive.small.path
+        medium_file = self.obj.responsive.medium.path
+        large_file = self.obj.responsive.large.path
+        self.obj.responsive.delete(self.obj)
+        self.obj.save()
+        self.assertFalse(os.path.exists(original_file))
+        self.assertFalse(os.path.exists(small_file))
+        self.assertFalse(os.path.exists(medium_file))
+        self.assertFalse(os.path.exists(large_file))
+        for size in ('small', 'medium', 'large'):
+            self.assertFalse(getattr(self.obj.responsive, size))
+            self.assertFalse(getattr(self.obj, f'responsive_{size}'))
