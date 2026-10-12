@@ -235,9 +235,7 @@ class ResponsiveImageFileDescriptor(files.ImageFileDescriptor):
         # method of the `ImageFileDescriptor` class of django's source code.
         previous_value = instance.__dict__.get(self.field.attname)
         super().__set__(instance, value)
-        if previous_value is None:
-            pass
-        elif isinstance(value, File) or value is None:
+        if previous_value is not None:
             self.field.update_resized_images(instance, value)
 
 
