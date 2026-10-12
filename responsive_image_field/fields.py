@@ -259,6 +259,9 @@ class OriginalResponsiveImageField(models.ImageField):
             if value:
                 setattr(instance, name, value)
             else:
+                # Clearing a responsive image field via the admin interface will
+                # fail to also clear related image fields if we simply set them
+                # to None. Not sure why though.
                 del getattr(instance, name).file
                 getattr(instance, name).name = None
                 setattr(instance, name, None)
